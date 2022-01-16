@@ -1,0 +1,5 @@
+serviceName: hra_service
+logger:
+  level: debug
+  devMode: false
+  encoder: json
