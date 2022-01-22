@@ -8,6 +8,39 @@ run:
 	go run cmd/main.go -config=./config/config.yml
 
 #=================================
+# Command for docker
+
+up: up_docker
+
+info: ps info_domen
+
+up_docker:
+	docker-compose up
+
+up_docker_d:
+	docker-compose up -d
+
+down:
+	docker-compose down --remove-orphans
+
+rebuild: down build up_docker info
+
+# флаг -v удаляет все volume (очищает все данные)
+down-clear:
+	docker-compose down -v --remove-orphans
+
+build:
+	docker-compose build
+
+ps:
+	docker-compose ps
+
+# ================================
+# MongoDB
+
+mongo:
+	cd ./scripts && mongo admin -u admin -p admin < mongo_init.js
+#=================================
 # Proto
 
 proto: proto_order

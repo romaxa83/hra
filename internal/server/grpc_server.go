@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/romaxa83/hra/config"
 	"github.com/romaxa83/hra/pkg/logger"
 	orders "github.com/romaxa83/hra/proto"
 	"google.golang.org/grpc/keepalive"
@@ -23,11 +24,19 @@ type GrpcServer struct {
 	errCh    chan error
 	listener net.Listener
 	logger   logger.Logger
+	config   *config.Config
 }
 
 // создаем Grps сервер
-func NewGrpcServer(service orders.OrderServiceServer, port string, logger logger.Logger) (GrpcServer, error) {
+func NewGrpcServer(
+	grpsService orders.OrderServiceServer,
+	port string,
+	logger logger.Logger,
+	cfg config.Config,
+) (GrpcServer, error) {
 	logger.Infof("Create gRPC-server - [:%s]", port)
+	logger.Infof("%+v", cfg.Mongo.URI)
+
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		return GrpcServer{}, err
@@ -41,13 +50,14 @@ func NewGrpcServer(service orders.OrderServiceServer, port string, logger logger
 	}))
 
 	//orderService := grpc2.NewGrpcOrderService()
-	orders.RegisterOrderServiceServer(grpcServer, service)
+	orders.RegisterOrderServiceServer(grpcServer, grpsService)
 
 	return GrpcServer{
 		server:   grpcServer,
 		listener: lis,
 		errCh:    make(chan error),
 		logger:   logger,
+		config:   &cfg,
 	}, nil
 }
 

@@ -3,3 +3,10 @@ logger:
   level: debug
   devMode: false
   encoder: json
+mongo:
+  uri: "mongodb://localhost:27017"
+  user: admin
+  password: admin
+  db: orders
+mongoCollections:
+  orders: orders

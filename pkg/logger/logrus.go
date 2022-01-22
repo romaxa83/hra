@@ -55,13 +55,10 @@ func (l *appLogger) getLoggerLevel() logrus.Level {
 }
 
 func (l *appLogger) InitLogger() {
-	//logLevel := l.getLoggerLevel()
-
 	logger := logrus.New()
 
-	//t := logrus.TextFormatter{}
-
-	logger.SetFormatter(&logrus.JSONFormatter{})
+	//logger.SetFormatter(&logrus.JSONFormatter{})
+	logger.SetFormatter(&logrus.TextFormatter{})
 
 	l.logger = logger
 }

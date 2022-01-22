@@ -1,11 +1,15 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"github.com/romaxa83/hra/config"
-	"github.com/romaxa83/hra/internal/delivery/grpc"
+	"github.com/romaxa83/hra/internal/order/delivery/grpc"
+	"github.com/romaxa83/hra/internal/order/repository"
+	"github.com/romaxa83/hra/internal/order/service"
 	"github.com/romaxa83/hra/internal/server"
 	"github.com/romaxa83/hra/pkg/logger"
+	"github.com/romaxa83/hra/pkg/mongodb"
 	"log"
 	"os"
 	"os/signal"
@@ -25,6 +29,7 @@ type app struct {
 	/* Listens for an application termination signal
 	   Ex. (Ctrl X, Docker container shutdown, etc) */
 	shutdownCh chan os.Signal
+	//config     config.Config
 }
 
 // start запускает сервера REST и gRPC в фоновом режиме
@@ -49,17 +54,26 @@ func newApp() (app, error) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	appLogger := logger.NewAppLogger(cfg.Logger)
 	appLogger.InitLogger()
+	appLogger.Info("Init logger")
 
-	appLogger.Warn("rrr")
+	ctx := context.Background()
+	mongoDBConn, err := mongodb.NewMongoDBConn(ctx, cfg.Mongo)
+	if err != nil {
+		log.Fatal(err)
+	}
+	mongoClient := mongoDBConn
+	//defer mongoDBConn.Disconnect(ctx) // nolint: errcheck
+	appLogger.Infof("Mongo connected: %v", mongoDBConn.NumberSessionsInProgress())
 
-	//lc := logger.NewLoggerConfig("info", true, "json")
-	//l := logger.NewAppLogger(lc)
+	mongoRepo := repository.NewMongoRepository(appLogger, cfg, mongoClient)
 
-	orderService := grpc.NewGrpcOrderService()
+	ser := service.NewOrderService(appLogger, mongoRepo)
+	orderService := grpc.NewGrpcOrderService(appLogger, ser, mongoRepo)
 
-	gs, err := server.NewGrpcServer(orderService, grpcPort, appLogger)
+	gs, err := server.NewGrpcServer(orderService, grpcPort, appLogger, *cfg)
 	if err != nil {
 		return app{}, err
 	}
@@ -68,7 +82,7 @@ func newApp() (app, error) {
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 
 	return app{
-		restServer: server.NewRestServer(orderService, restPort),
+		restServer: server.NewRestServer(orderService, restPort, appLogger),
 		grpcServer: gs,
 		shutdownCh: quit,
 	}, nil

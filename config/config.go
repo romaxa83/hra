@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/romaxa83/hra/pkg/logger"
+	"github.com/romaxa83/hra/pkg/mongodb"
 	"github.com/spf13/viper"
 	"os"
 )
@@ -16,8 +17,14 @@ func init() {
 }
 
 type Config struct {
-	ServiceName string         `mapstructure:"serviceName"`
-	Logger      *logger.Config `mapstructure:"logger"`
+	ServiceName      string           `mapstructure:"serviceName"`
+	Logger           *logger.Config   `mapstructure:"logger"`
+	Mongo            *mongodb.Config  `mapstructure:"mongo"`
+	MongoCollections MongoCollections `mapstructure:"mongoCollections"`
+}
+
+type MongoCollections struct {
+	Orders string `mapstructure:"orders"`
 }
 
 func InitConfig() (*Config, error) {

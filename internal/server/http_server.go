@@ -1,7 +1,9 @@
 package server
 
 import (
+	"github.com/romaxa83/hra/pkg/logger"
 	orders "github.com/romaxa83/hra/proto"
+	"github.com/segmentio/kafka-go"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -11,14 +13,16 @@ import (
 
 // RestServer реализует сервер REST для сервиса заказов
 type RestServer struct {
-	server       *http.Server
-	orderService orders.OrderServiceServer // Тот же сервис заказов, что и в сервере gRPC
-	errCh        chan error
+	server           *http.Server
+	grpsOrderService orders.OrderServiceServer // Тот же сервис заказов, что и в сервере gRPC
+	errCh            chan error
+	logger           logger.Logger
+	kafkaConn        *kafka.Conn
 }
 
 // Функция NewRestServer отлично подходит для создания RestServer
-func NewRestServer(orderService orders.OrderServiceServer, port string) RestServer {
-	//logger.Infof("Create HTTP-server - [:%s]", port)
+func NewRestServer(orderService orders.OrderServiceServer, port string, logger logger.Logger) RestServer {
+	logger.Infof("Create HTTP-server - [:%s]", port)
 	router := gin.Default()
 
 	rs := RestServer{
@@ -26,8 +30,9 @@ func NewRestServer(orderService orders.OrderServiceServer, port string) RestServ
 			Addr:    ":" + port,
 			Handler: router,
 		},
-		orderService: orderService,
-		errCh:        make(chan error),
+		grpsOrderService: orderService,
+		errCh:            make(chan error),
+		logger:           logger,
 	}
 
 	// Регистрация маршрутов
@@ -43,7 +48,7 @@ func NewRestServer(orderService orders.OrderServiceServer, port string) RestServ
 
 // Start запускает сервер REST в фоновом режиме, отправляя ошибку в канал ошибок
 func (r RestServer) Start() {
-	//logger.Infof("🚀 Start HTTP-server")
+	r.logger.Infof("🚀 Start HTTP-server")
 	go func() {
 		r.errCh <- r.server.ListenAndServe()
 	}()
@@ -70,7 +75,7 @@ func (r RestServer) test(c *gin.Context) {
 	}
 
 	// Использует сервис заказов, чтобы создать заказ из запроса
-	resp, err := r.orderService.CreateTest(c.Request.Context(), &req)
+	resp, err := r.grpsOrderService.CreateTest(c.Request.Context(), &req)
 	if err != nil {
 		c.String(http.StatusInternalServerError, "error creating order")
 	}
@@ -93,7 +98,7 @@ func (r RestServer) create(c *gin.Context) {
 	}
 
 	// Использует сервис заказов, чтобы создать заказ из запроса
-	resp, err := r.orderService.Create(c.Request.Context(), &req)
+	resp, err := r.grpsOrderService.Create(c.Request.Context(), &req)
 	if err != nil {
 		c.String(http.StatusInternalServerError, "error creating order")
 	}
