@@ -1,8 +1,10 @@
 package server
 
 import (
+	"github.com/opentracing/opentracing-go"
 	"github.com/romaxa83/hra/config"
 	"github.com/romaxa83/hra/pkg/logger"
+	"github.com/romaxa83/hra/pkg/tracing"
 	orders "github.com/romaxa83/hra/proto"
 	"google.golang.org/grpc/keepalive"
 	"net"
@@ -53,6 +55,15 @@ func NewGrpcServer(
 
 	//orderService := grpc2.NewGrpcOrderService()
 	orders.RegisterOrderServiceServer(grpcServer, grpsService)
+
+	if cfg.Jaeger.Enable {
+		tracer, closer, err := tracing.NewJaegerTracer(cfg.Jaeger)
+		if err != nil {
+			logger.Error("Problem with Jaeger", err)
+		}
+		defer closer.Close()
+		opentracing.SetGlobalTracer(tracer)
+	}
 
 	return &GrpcServer{
 		server:   grpcServer,

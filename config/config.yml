@@ -10,3 +10,8 @@ mongo:
   db: orders
 mongoCollections:
   orders: orders
+jaeger:
+  enable: true
+  serviceName: hra_service
+  hostPort: "localhost:6831"
+  logSpans: false

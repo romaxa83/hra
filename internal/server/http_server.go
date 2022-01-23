@@ -1,7 +1,10 @@
 package server
 
 import (
+	"github.com/opentracing/opentracing-go"
+	"github.com/romaxa83/hra/config"
 	"github.com/romaxa83/hra/pkg/logger"
+	"github.com/romaxa83/hra/pkg/tracing"
 	orders "github.com/romaxa83/hra/proto"
 	"net/http"
 
@@ -16,12 +19,28 @@ type RestServer struct {
 	grpsOrderService orders.OrderServiceServer // Тот же сервис заказов, что и в сервере gRPC
 	errCh            chan error
 	logger           logger.Logger
+	cfg              config.Config
 }
 
 // Функция NewRestServer отлично подходит для создания RestServer
-func NewRestServer(orderService orders.OrderServiceServer, port string, logger logger.Logger) RestServer {
+func NewRestServer(
+	orderService orders.OrderServiceServer,
+	port string,
+	logger logger.Logger,
+	cfg config.Config,
+) RestServer {
 	logger.Infof("Create HTTP-server - [:%s]", port)
 	router := gin.Default()
+
+	if cfg.Jaeger.Enable {
+		tracer, closer, err := tracing.NewJaegerTracer(cfg.Jaeger)
+		if err != nil {
+			logger.Error("Problem with Jaeger", err)
+		}
+		defer closer.Close()
+		logger.Warn("HTTP Tracer", tracer)
+		opentracing.SetGlobalTracer(tracer)
+	}
 
 	rs := RestServer{
 		server: &http.Server{
@@ -64,6 +83,13 @@ func (r RestServer) Error() chan error {
 
 // Функция-обработчик create создает заказ из запроса (тело JSON)
 func (r RestServer) test(c *gin.Context) {
+	ctx, span := tracing.StartHttpServerTracerSpan(*c, "ordersHandlers.CreatOrder")
+	//defer span.Finish()
+
+	r.logger.Warn("Test HEADER", c.Request.Header)
+	r.logger.Warn("Test CREATE ", ctx)
+	r.logger.Warn("Test CREATE SPAN ", span)
+
 	var req orders.CreateTestRequest
 
 	// Демаршализация запроса

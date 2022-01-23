@@ -7,6 +7,7 @@ import (
 	"github.com/romaxa83/hra/internal/order/repository"
 	"github.com/romaxa83/hra/internal/order/service"
 	"github.com/romaxa83/hra/pkg/logger"
+	"github.com/romaxa83/hra/pkg/tracing"
 	orders "github.com/romaxa83/hra/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -32,7 +33,10 @@ func NewGrpcOrderService(
 }
 
 func (s *grpcOrderService) CreateTest(ctx context.Context, req *orders.CreateTestRequest) (*orders.TestResponse, error) {
-	
+
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "grpcService.CreateOrderTest")
+	defer span.Finish()
+
 	// создаем команду (аналог dto)
 	id, _ := uuid.NewRandom()
 	command := commands.NewCreateOrderCmd(id.String(), req.Name, time.Now())

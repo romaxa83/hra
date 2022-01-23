@@ -82,7 +82,7 @@ func newApp() (app, error) {
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 
 	return app{
-		restServer: server.NewRestServer(orderService, restPort, appLogger),
+		restServer: server.NewRestServer(orderService, restPort, appLogger, *cfg),
 		grpcServer: gs,
 		shutdownCh: quit,
 	}, nil

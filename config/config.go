@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/romaxa83/hra/pkg/logger"
 	"github.com/romaxa83/hra/pkg/mongodb"
+	"github.com/romaxa83/hra/pkg/tracing"
 	"github.com/spf13/viper"
 	"os"
 )
@@ -21,6 +22,7 @@ type Config struct {
 	Logger           *logger.Config   `mapstructure:"logger"`
 	Mongo            *mongodb.Config  `mapstructure:"mongo"`
 	MongoCollections MongoCollections `mapstructure:"mongoCollections"`
+	Jaeger           *tracing.Config  `mapstructure:"jaeger"`
 }
 
 type MongoCollections struct {

@@ -10,7 +10,10 @@ run:
 #=================================
 # Command for docker
 
-up: up_docker
+# с выводом логов в терминал
+up_v: up_docker
+
+up: up_docker_d info
 
 info: ps info_domen
 
@@ -48,3 +51,12 @@ proto: proto_order
 proto_order:
 	@echo Generating order proto
 	cd proto && protoc --go_out=. --go-grpc_opt=require_unimplemented_servers=false --go-grpc_out=. order.proto
+
+#=================================
+# Info for App
+
+info_domen:
+	echo '---------------------------------';
+	echo '----------DEV--------------------';
+	echo JAEGER - http://localhost:16686
+	echo '---------------------------------';
