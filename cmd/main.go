@@ -25,7 +25,7 @@ const (
 // и завершения работы микросервиса Order
 type app struct {
 	restServer server.RestServer
-	grpcServer server.GrpcServer
+	grpcServer *server.GrpcServer
 	/* Listens for an application termination signal
 	   Ex. (Ctrl X, Docker container shutdown, etc) */
 	shutdownCh chan os.Signal

@@ -3,7 +3,6 @@ package server
 import (
 	"github.com/romaxa83/hra/pkg/logger"
 	orders "github.com/romaxa83/hra/proto"
-	"github.com/segmentio/kafka-go"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -17,7 +16,6 @@ type RestServer struct {
 	grpsOrderService orders.OrderServiceServer // Тот же сервис заказов, что и в сервере gRPC
 	errCh            chan error
 	logger           logger.Logger
-	kafkaConn        *kafka.Conn
 }
 
 // Функция NewRestServer отлично подходит для создания RestServer

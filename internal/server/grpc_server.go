@@ -6,6 +6,7 @@ import (
 	orders "github.com/romaxa83/hra/proto"
 	"google.golang.org/grpc/keepalive"
 	"net"
+
 	"time"
 
 	"google.golang.org/grpc"
@@ -24,7 +25,7 @@ type GrpcServer struct {
 	errCh    chan error
 	listener net.Listener
 	logger   logger.Logger
-	config   *config.Config
+	cfg      *config.Config
 }
 
 // создаем Grps сервер
@@ -33,13 +34,14 @@ func NewGrpcServer(
 	port string,
 	logger logger.Logger,
 	cfg config.Config,
-) (GrpcServer, error) {
+) (*GrpcServer, error) {
+
 	logger.Infof("Create gRPC-server - [:%s]", port)
 	logger.Infof("%+v", cfg.Mongo.URI)
 
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
-		return GrpcServer{}, err
+		return &GrpcServer{}, err
 	}
 
 	grpcServer := grpc.NewServer(grpc.KeepaliveParams(keepalive.ServerParameters{
@@ -52,17 +54,17 @@ func NewGrpcServer(
 	//orderService := grpc2.NewGrpcOrderService()
 	orders.RegisterOrderServiceServer(grpcServer, grpsService)
 
-	return GrpcServer{
+	return &GrpcServer{
 		server:   grpcServer,
 		listener: lis,
 		errCh:    make(chan error),
 		logger:   logger,
-		config:   &cfg,
+		cfg:      &cfg,
 	}, nil
 }
 
 // Start запускает сервер GRPC в фоновом режиме, отправляя ошибку в канал ошибок
-func (g GrpcServer) Start() {
+func (g *GrpcServer) Start() {
 	g.logger.Infof("🚀 Start gRPC-server")
 	go func() {
 		g.errCh <- g.server.Serve(g.listener)
@@ -70,11 +72,11 @@ func (g GrpcServer) Start() {
 }
 
 // Stop останавливает сервер
-func (g GrpcServer) Stop() {
+func (g *GrpcServer) Stop() {
 	g.server.GracefulStop()
 }
 
 // Error возвращает канал ошибок сервера
-func (g GrpcServer) Error() chan error {
+func (g *GrpcServer) Error() chan error {
 	return g.errCh
 }

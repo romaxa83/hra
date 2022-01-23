@@ -9,8 +9,6 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/klauspost/compress v1.14.1 // indirect
 	github.com/pkg/errors v0.9.1
-	github.com/romaxa83/mst-app v0.0.0-20220119193026-e773c5ecfd1c
-	github.com/segmentio/kafka-go v0.4.27
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.10.1
 	github.com/ugorji/go v1.2.6 // indirect
